@@ -4,15 +4,26 @@ export function isStoryTrophy(trophy) {
   return trophy.kind === 'story';
 }
 
-export function displayName(trophy, earned, spoilersOn) {
-  if (spoilersOn && isStoryTrophy(trophy) && !earned.has(trophy.id)) {
+// One place for the spoiler rule, so the list, the detail panel, the roadmap and
+// Next Up all hide the same trophies. A trophy the player revealed with the
+// Reveal button (or one already earned) is never hidden.
+export function isSpoilerHidden(trophy, earned, spoilersOn, revealed) {
+  if (!spoilersOn) return false;
+  if (!isStoryTrophy(trophy)) return false;
+  if (earned.has(trophy.id)) return false;
+  if (revealed && revealed.has(trophy.id)) return false;
+  return true;
+}
+
+export function displayName(trophy, earned, spoilersOn, revealed) {
+  if (isSpoilerHidden(trophy, earned, spoilersOn, revealed)) {
     return 'Hidden story trophy';
   }
   return trophy.name;
 }
 
-export function displayDescription(trophy, earned, spoilersOn) {
-  if (spoilersOn && isStoryTrophy(trophy) && !earned.has(trophy.id)) {
+export function displayDescription(trophy, earned, spoilersOn, revealed) {
+  if (isSpoilerHidden(trophy, earned, spoilersOn, revealed)) {
     return 'Hidden until earned — turn spoilers off to reveal it.';
   }
   return trophy.description;

@@ -31,6 +31,11 @@ h1 {
 .bar { height: 12px; background: #3a3f47; border-radius: 6px; overflow: hidden; margin-top: 6px; }
 .bar span { display: block; height: 100%; background: #e0653a; width: 0; }
 .gradeCounts { margin: 6px 0 0; font-size: 14px; font-weight: 600; color: #e8e2d4; }
+.psnPoints { margin: 4px 0 0; font-size: 14px; font-weight: 600; color: #e8e2d4; }
+.auditStrip {
+  margin: 0; padding: 9px 24px; font-size: 14px; font-weight: 700; line-height: 1.4;
+  color: #ffd9a8; background: #17191e; border-top: 1px solid #343945;
+}
 .views { display: flex; gap: 8px; padding: 0 24px 10px; }
 .views button {
   font-size: 16px; font-weight: 700; padding: 8px 18px;
@@ -84,6 +89,33 @@ main { padding: 16px 24px 8px; }
 .chip.missable { background: #fde8e8; border-color: #c0392b; color: #8f1d12; }
 .chip.hidden { background: #efe9dc; border-color: #8a7f68; color: #4a4438; }
 .chip.count { background: #e3f0e1; border-color: #5b8c5a; color: #234d22; }
+.chip.points { background: #e8f5e9; border-color: #2e7d32; color: #1b5e20; }
+.chip.unconfirmed { background: #fff3e0; border-color: #e65100; color: #bf360c; }
+.counter { display: inline-flex; gap: 4px; align-items: center; font-size: 12px; font-weight: 700; }
+.counter button {
+  width: 20px; height: 20px; padding: 0; font-size: 14px; font-weight: 700; line-height: 1;
+  border-radius: 6px; border: 1px solid #5b8c5a; background: #fff; color: #234d22; cursor: pointer;
+}
+.trophyList li.stageHead {
+  display: block; background: #efe9dc; border: 1px solid #ddd3bf; border-radius: 8px;
+  padding: 6px 12px; margin-bottom: 8px; cursor: default;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.4px; color: #4a4438;
+}
+.counterRow { display: flex; gap: 8px; align-items: center; margin: 10px 0; font-size: 16px; font-weight: 700; }
+.counterRow button {
+  width: 30px; height: 30px; padding: 0; font-size: 18px; font-weight: 700; line-height: 1;
+  border-radius: 8px; border: 1px solid #4a505c; background: #fff; color: #1c1a17; cursor: pointer;
+}
+.steps { margin: 6px 0; padding-left: 22px; font-size: 15px; line-height: 1.45; }
+.steps li { margin-bottom: 4px; }
+.sourceMatrix { margin: 0; padding-left: 22px; font-size: 14px; }
+.sourceMatrix li { margin-bottom: 3px; }
+.sourceMatrix a { color: #1a4d8f; }
+.hiddenNote { font-size: 15px; color: #4a4438; margin: 10px 0; }
+.revealBtn {
+  font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 8px;
+  border: 1px solid #e0653a; background: #e0653a; color: #fff; cursor: pointer;
+}
 .detail { background: #fffdf8; border: 2px solid #e0653a; border-radius: 12px; padding: 16px 18px; }
 .detail h2 { margin: 0 0 4px; font-family: Georgia, Palatino, serif; font-size: 26px; line-height: 1.15; }
 .detail .official { font-size: 15px; color: #4a4438; margin: 0 0 8px; }
@@ -111,12 +143,18 @@ main { padding: 16px 24px 8px; }
 .stage ul { margin: 0; padding-left: 18px; font-size: 14px; }
 .stage li { margin-bottom: 3px; }
 .stage .stageCount { font-weight: 700; color: #8f1d12; }
-.missableBanner { background: #fde8e8; border: 2px solid #c0392b; border-radius: 12px; padding: 14px 18px; max-width: 900px; }
+.missableBanner { background: #fde8e8; border: 2px solid #c0392b; border-radius: 12px; padding: 14px 18px; }
 .missableBanner h2 { margin: 0 0 6px; font-size: 24px; color: #8f1d12; }
 .missableBanner p { margin: 0; font-size: 16px; }
-.missableList { margin-top: 14px; max-width: 900px; }
+.trackerBanner { display: flex; gap: 14px; align-items: center; justify-content: space-between; padding: 8px 16px; margin-bottom: 12px; }
+.trackerBanner p { font-size: 15px; }
+.trackerBanner button {
+  flex: none; font-size: 14px; font-weight: 700; padding: 8px 16px; border-radius: 8px;
+  border: 1px solid #c0392b; background: #c0392b; color: #fff; cursor: pointer;
+}
+.missableList { margin-top: 14px; }
 .missableList .detail { margin-bottom: 12px; }
-.safeNote { font-size: 15px; max-width: 900px; }
+.safeNote { font-size: 15px; }
 .empty { padding: 24px; text-align: center; color: #6b5f4a; font-size: 16px; }
 footer { padding: 12px 24px 20px; font-size: 13px; color: #6b5f4a; max-width: 1100px; }
 footer p { margin: 4px 0; }

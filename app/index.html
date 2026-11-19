@@ -19,8 +19,10 @@
       <span class="bignum" id="earnedNum">0</span><span class="bigof">/ 55 earned</span>
       <div class="bar" id="progressBar"><span id="progressFill"></span></div>
       <p class="gradeCounts" id="gradeCounts"></p>
+      <p class="psnPoints" id="psnPoints"></p>
     </div>
   </div>
+  <p class="auditStrip" id="auditStrip"></p>
   <nav class="views" id="viewTabs">
     <button type="button" data-view="tracker" class="active">Tracker</button>
     <button type="button" data-view="roadmap">Roadmap to Platinum</button>
@@ -29,12 +31,12 @@
   <div class="toolbar" id="toolbar">
     <input id="search" type="search" placeholder="Search a trophy or mission…" aria-label="Search trophies">
     <div class="kinds" id="kindFilters">
-      <button type="button" data-kind="all" class="active">All</button>
-      <button type="button" data-kind="story">Story</button>
-      <button type="button" data-kind="missable">Missable</button>
-      <button type="button" data-kind="collectibles">Collectibles</button>
-      <button type="button" data-kind="activities">Activities</button>
-      <button type="button" data-kind="online">Online</button>
+      <button type="button" data-kind="all" data-label="All" class="active">All</button>
+      <button type="button" data-kind="story" data-label="Story">Story</button>
+      <button type="button" data-kind="missable" data-label="Missable">Missable</button>
+      <button type="button" data-kind="collectibles" data-label="Collectibles">Collectibles</button>
+      <button type="button" data-kind="activities" data-label="Activities">Activities</button>
+      <button type="button" data-kind="online" data-label="Online">Online</button>
     </div>
     <select id="gradeFilter" aria-label="Filter by grade">
       <option value="all">All grades</option>
@@ -55,6 +57,10 @@
 </header>
 <main>
   <section id="trackerView" class="view">
+    <div class="missableBanner trackerBanner">
+      <p><strong>⚠ 1 missable trophy — Positive Mental Attitude.</strong> The Chapter 1 balcony meditation vanishes after Chapter 1. Keep a Chapter 1 save.</p>
+      <button type="button" id="showMissableBtn">Show it</button>
+    </div>
     <div class="columns">
       <div class="listcol">
         <p class="listhead"><span id="shownCount"></span> <span id="activeFilterNote"></span></p>
@@ -81,7 +87,7 @@
 </main>
 <footer>
   <p>Platinum Atlas — an offline, fan-made tracker. Trophy names, descriptions and grades are the official PlayStation list, via Exophase and PSNProfiles. Guides are this guide's own words and name their sources beside each trophy. No Rockstar logo or artwork is used. Works with the network off; progress is saved in your browser only.</p>
-  <p id="sourceLine">Sources: Exophase — Grand Theft Auto VI Trophies (PS5) · PSNProfiles — Grand Theft Auto VI Trophies · PowerPyx — GTA 6 Trophy Guide &amp; Roadmap · PlanetGTA6 — GTA 6 Trophies</p>
+  <p id="sourceLine">Sources, all read 20 Nov 2026: [1] PowerPyx — GTA 6 Trophy Guide &amp; Roadmap · [2] PSNProfiles — Grand Theft Auto VI Trophies · [3] Exophase — Grand Theft Auto VI Trophies (PS5) · [4] GTAbase — GTA 6 Trophy Guide &amp; Achievements List · [5] OutputLag — GTA 6 Trophy List · [6] KeenGamer — GTA 6 Trophy Guide &amp; Platinum Roadmap · [7] GTA-Zone — GTA 6 Trophy List. Every guide step cites its source by number; the full source list with links is beside each trophy.</p>
 </footer>
 <script type="module" src="js/main.js"></script>
 </body>

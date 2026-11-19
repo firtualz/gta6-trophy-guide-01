@@ -28,11 +28,81 @@ export const ROADMAP_STAGES = [
   },
 ];
 
-export async function loadTrophyData() {
+// The guide data file, loaded once and shared: the trophies, the numbered sources
+// every guide cites, and the audit numbers the header strip shows.
+let cachedDoc = null;
+
+export async function loadGuideDoc() {
+  if (cachedDoc) return cachedDoc;
   const response = await fetch(DATA_URL);
   if (!response.ok) throw new Error('trophy data did not load');
-  const doc = await response.json();
+  cachedDoc = await response.json();
+  return cachedDoc;
+}
+
+export async function loadTrophyData() {
+  const doc = await loadGuideDoc();
   return doc.trophies;
+}
+
+export async function loadSources() {
+  const doc = await loadGuideDoc();
+  return doc.sources || [];
+}
+
+// PlayStation trophy points by grade: bronze 15, silver 30, gold 90, platinum 300.
+// The list totals 1,350 points.
+export const PSN_POINTS = { platinum: 300, gold: 90, silver: 30, bronze: 15 };
+
+export function pointsFor(trophy) {
+  return PSN_POINTS[trophy.grade] || 0;
+}
+
+export function totalPsnPoints(trophies) {
+  return trophies.reduce((sum, t) => sum + pointsFor(t), 0);
+}
+
+export function earnedPsnPoints(trophies, earned) {
+  return trophies.reduce((sum, t) => sum + (earned.has(t.id) ? pointsFor(t) : 0), 0);
+}
+
+export function countByKind(trophies, kind) {
+  if (kind === 'missable') return trophies.filter((t) => t.missable).length;
+  if (kind === 'online') return 0;
+  return trophies.filter((t) => t.kind === kind).length;
+}
+
+// The audit strip's numbers, all computed from the data so they cannot drift:
+// every guide cites a source, every step carries a citation, and the unconfirmed
+// trophies are counted, not hidden.
+export function auditStats(trophies, sources) {
+  const totalSteps = trophies.reduce((s, t) => s + (t.steps ? t.steps.length : 0), 0);
+  const citedSteps = trophies.reduce(
+    (s, t) => s + (t.steps ? t.steps.filter((step) => /\[\d+\]/.test(step)).length : 0),
+    0,
+  );
+  return {
+    total: trophies.length,
+    platinum: countByGrade(trophies, 'platinum'),
+    gold: countByGrade(trophies, 'gold'),
+    silver: countByGrade(trophies, 'silver'),
+    bronze: countByGrade(trophies, 'bronze'),
+    hidden: trophies.filter((t) => t.hidden).length,
+    citedGuides: trophies.filter((t) => t.sources && t.sources.length > 0).length,
+    totalSteps,
+    citedSteps,
+    missable: trophies.filter((t) => t.missable).length,
+    unconfirmed: trophies.filter((t) => t.unconfirmed).length,
+    sourceCount: sources.length,
+  };
+}
+
+// How many guides cite each numbered source, for the source matrix.
+export function sourceCoverage(trophies, sources) {
+  return sources.map((src) => ({
+    ...src,
+    citedBy: trophies.filter((t) => (t.steps || []).some((step) => step.includes(`[${src.n}]`))).length,
+  }));
 }
 
 export function trophyById(trophies, id) {
