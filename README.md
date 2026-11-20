@@ -1,5 +1,9 @@
 # Platinum Atlas — GTA 6 Trophy Guide & Tracker
 
+[![make.fun · gta6-trophy-guide-01](https://make.fun/badge/gta6-trophy-guide-01.svg)](https://make.fun/bounty/gta6-trophy-guide-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
+[![rank](https://make.fun/badge/gta6-trophy-guide-01/firtualz/gta6-trophy-guide-01/rank.svg)](https://make.fun/bounty/gta6-trophy-guide-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
+[![reward](https://make.fun/badge/gta6-trophy-guide-01/firtualz/gta6-trophy-guide-01/reward.svg)](https://make.fun/bounty/gta6-trophy-guide-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
+
 A static, fully offline trophy guide and tracker for Grand Theft Auto VI (PlayStation 5): all 55 official
 trophies — 1 platinum, 2 gold, 6 silver, 46 bronze, 28 hidden, 0 online — with a numbered, cited guide for
 every trophy, a 7-stage roadmap to the platinum, a missables view, and a tracker that saves progress in the
