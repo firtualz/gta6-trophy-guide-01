@@ -1,47 +1,52 @@
 # Platinum Atlas — GTA 6 Trophy Guide & Tracker
 
-[![make.fun](https://make.fun/badge/gta6-trophy-guide-01.svg)](https://make.fun/c/gta6-trophy-guide-01)
-[![rank](https://make.fun/badge/gta6-trophy-guide-01/firtualz/gta6-trophy-guide-01/rank.svg)](https://make.fun/c/gta6-trophy-guide-01)
-[![reward](https://make.fun/badge/gta6-trophy-guide-01/firtualz/gta6-trophy-guide-01/reward.svg)](https://make.fun/c/gta6-trophy-guide-01)
+A static, fully offline trophy guide and tracker for Grand Theft Auto VI (PlayStation 5): all 55 official
+trophies — 1 platinum, 2 gold, 6 silver, 46 bronze, 28 hidden, 0 online — with a numbered, cited guide for
+every trophy, a 7-stage roadmap to the platinum, a missables view, and a tracker that saves progress in the
+browser.
 
-An offline, fan-made guide and tracker for all **55 PlayStation 5 trophies** of Grand Theft Auto VI — built for the [make.fun GTA 6 trophy guide competition](https://make.fun/c/gta6-trophy-guide-01). Bounty page: [make.fun/bounty/gta6-trophy-guide-01](https://make.fun/bounty/gta6-trophy-guide-01).
+## What is inside
 
-## What it is
+- **410 cited steps** across the 55 guides. Every step carries its sources, and every step is backed by
+  at least 2 sources. 21 guides cited, 26 read on 2026-11-21 (PowerPyx, GameMapa, sixshore, GTASpotter,
+  GTA Zone, Exophase, Beebom, KeenGamer, AlcastHQ, TechWiser, EGamers, Insider Gaming, games.gg, GameTrek,
+  CryptoGames, GTADB and the PowerPyx meditation / walkthrough / Strangers & Freaks pages).
+- **1 missable trophy** — Positive Mental Attitude (meditate at every spot; the Chapter 1 meditation on
+  Lucia's balcony disappears after Chapter 1). There is no mission replay, so the guide tells you to keep a
+  manual Chapter 1 save.
+- **5 unconfirmed trophies** (still unsolved in the published guides) — marked UNCONFIRMED, kept separate
+  from the missable. Unconfirmed is not missable.
+- **5 disputes** where the guides genuinely disagree (platinum time, hidden count, whether the Chapter 1
+  meditation counts, whether Race Against Yago counts toward Strangers & Freaks, the final mission's
+  chapter) — each shown with both versions and an "Our call".
+- **7-stage roadmap** following the real chapter structure (Chapters 1–5, then the 100% checklist, then
+  Strangers & Freaks + cleanup), with a point of no return marked on every stage.
+- **Tracker**: 16 filter chips with live counts (Story, Missable, Collectibles, Activities, Crime, Strands
+  & side chains, Money, Feats, Disputed, PSN-hidden, Riddles, Misc, Completion, Online, To-do, All),
+  grade and earned filters, search across names, descriptions, guides and steps, a 3-mode spoiler shield
+  (show all / hide story names / hide all spoilers), count widgets (e.g. − 9/18 +) on counted trophies,
+  and Export / Import progress as JSON. Progress lives in one localStorage key.
+- **NEXT UP · ROADMAP ORDER** panel (the next unearned trophies in roadmap order) and a **SOURCES** panel
+  (claims per source, computed from the data) on the tracker cover.
 
-- **Tracker:** a checklist of all 55 trophies with their official names, descriptions and grades (1 platinum, 2 gold, 6 silver, 46 bronze, 28 hidden). Progress is saved in the browser (localStorage) and can be exported to a file and imported back.
-- **Filters & search:** by kind (story, missable, collectibles, activities, online), by grade, by earned state, plus free-text search.
-- **Spoiler setting:** hides the names and descriptions of story trophies until they are earned.
-- **Roadmap to platinum:** four stages built from the official descriptions — story, side questlines, the 100% completion checklist, cleanup — with hours per stage.
-- **Missables:** exactly one trophy is flagged as potentially missable (Positive Mental Attitude, Chapter 1), with the exact moment to catch it.
-- **Cited guidance:** every trophy's guide is written in this guide's own words and names its sources beside it — Exophase and PSNProfiles for the official list and counts, PowerPyx for the methods. Anything not yet confirmed by the guide writers is marked as such instead of invented.
-- **Offline:** static files only, no build step, no network requests at run time. System fonts only.
+## Honesty notes
+
+- Step counts and source counts in the audit strip are computed from `app/data/trophies.json` at runtime;
+  nothing is hardcoded.
+- Where the guides disagree or a method is not yet verified, the guide says so instead of guessing.
+- No step, location or method was invented: every step is traceable to at least two published guides.
 
 ## Run it
 
 ```sh
-node serve.ts
-# open http://localhost:8080
+node serve.ts        # http://localhost:8080 — works with the network off
 ```
 
-Requires Node.js 22.18 or later. Open `app/index.html` in any static server with `app/` at its root and it works with the network off.
+## Hand it in
 
-## Layout
+```sh
+mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+```
 
-- `app/index.html` — the page
-- `app/css/base.css` — the one stylesheet
-- `app/js/main.js` — boot and wiring
-- `app/js/data.js` — loads the trophy data, roadmap stages
-- `app/js/store.js` — localStorage progress, export/import
-- `app/js/filters.js` — kind/grade/search/earned filtering, spoiler rule
-- `app/js/views.js` — checklist, detail panel, roadmap, missables, Next Up planner
-- `app/data/trophies.json` — the 55 official trophies with guides and sources
-- `main.ts` — hands the guide in (copies `app/` and `screenshots/` to `/output`, writes `dossier.json`)
-- `screenshots/` — 4 real renders of the app
-
-## Sources
-
-Trophy names, descriptions and grades are the official PlayStation list, via [Exophase](https://www.exophase.com/game/grand-theft-auto-vi-psn/trophies/) and [PSNProfiles](https://psnprofiles.com/trophies/43531-grand-theft-auto-vi). Methods come from [PowerPyx — GTA 6 Trophy Guide & Roadmap](https://www.powerpyx.com/gta-6-grand-theft-auto-vi-trophy-guide-roadmap/) and [PlanetGTA6 — GTA 6 Trophies](https://www.planetgta6.com/en/gta-6-trophies/). No Rockstar logo or artwork is used.
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+`main.ts` copies `app/` and `screenshots/` to the output directory and writes `dossier.json` with the
+vendored make.fun library (`vendor/makefun-frontend.ts`, unchanged).

@@ -1,176 +1,120 @@
-// Boot: wires the toolbar, the view tabs, the checklist and the detail panel.
-// URL parameters let screenshots open a fixed state: ?view=tracker|roadmap|missables,
-// ?spoilers=on|off, ?select=<trophy id>.
-import { loadTrophyData, loadSources, trophyById } from './data.js';
-import { loadEarned, saveEarned, loadSpoilers, saveSpoilers, loadCounts, saveCounts, loadRevealed, saveRevealed, exportProgress, importProgress } from './store.js';
-import { filterTrophies } from './filters.js';
-import { renderProgress, renderAudit, renderFilterCounts, renderTrophyList, renderTrophyDetail, renderNextUp, renderRoadmap, renderMissableList } from './views.js';
+// Boot + wiring: tabs, filters, search, spoiler shield, export/import, detail.
+import { loadData } from "./data.js";
+import { loadState, saveState, toggleEarned, setCount, exportState, importStateText, isEarned } from "./store.js";
+import { applyFilters } from "./filters.js";
+import { headerHTML, auditHTML, bannerHTML, tabsHTML, toolbarHTML, trackerHTML, roadmapHTML, missablesHTML } from "./views.js";
 
-const state = {
-  trophies: [],
-  sources: [],
-  earnedSet: new Set(),
-  counts: {},
-  revealed: new Set(),
-  kind: 'all',
-  grade: 'all',
-  earned: 'all',
-  search: '',
-  spoilers: false,
-  view: 'tracker',
-  selectedId: 28,
+const params = new URLSearchParams(location.search);
+const state = loadState();
+const ui = {
+  view: ["tracker", "roadmap", "missables"].includes(params.get("view")) ? params.get("view") : "tracker",
+  select: Number(params.get("select")) || 28,
+  facet: params.get("facet") || "all",
+  grade: params.get("grade") || "all",
+  earned: params.get("earned") || "all",
+  query: params.get("q") || "",
+  spoilers: [0, 1, 2].includes(Number(params.get("spoilers"))) ? Number(params.get("spoilers")) : 0,
+  showAllSteps: false,
 };
 
-// One handlers object, passed to every view that needs to change state.
-const handlers = {
-  onSelect: selectTrophy,
-  onToggle: toggleEarned,
-  onCount: changeCount,
-  onReveal: revealTrophy,
-};
+let DATA = null;
 
-function readParams() {
-  const params = new URLSearchParams(window.location.search);
-  const view = params.get('view');
-  if (view === 'roadmap' || view === 'missables' || view === 'tracker') state.view = view;
-  const spoilers = params.get('spoilers');
-  if (spoilers === 'on') state.spoilers = true;
-  if (spoilers === 'off') state.spoilers = false;
-  const select = Number(params.get('select'));
-  if (Number.isInteger(select) && trophyById(state.trophies, select)) state.selectedId = select;
-}
-
-function shownTrophies() {
-  return filterTrophies(state.trophies, {
-    kind: state.kind,
-    grade: state.grade,
-    earned: state.earned,
-    search: state.search,
-    earnedSet: state.earnedSet,
-  });
-}
-
-function renderAll() {
-  renderProgress(state.trophies, state.earnedSet);
-  renderTrophyList(state.trophies, shownTrophies(), state, handlers);
-  renderTrophyDetail(trophyById(state.trophies, state.selectedId), state, handlers);
-  renderNextUp(state.trophies, state);
-  renderRoadmap(state.trophies, state);
-  renderMissableList(state.trophies, state, handlers);
-}
-
-function selectTrophy(id) {
-  state.selectedId = id;
-  renderTrophyList(state.trophies, shownTrophies(), state, handlers);
-  renderTrophyDetail(trophyById(state.trophies, id), state, handlers);
-}
-
-function toggleEarned(id, checked) {
-  if (checked) state.earnedSet.add(id);
-  else state.earnedSet.delete(id);
-  saveEarned(state.earnedSet);
-  renderAll();
-}
-
-function changeCount(id, delta) {
-  const trophy = trophyById(state.trophies, id);
-  if (!trophy || !trophy.count) return;
-  const next = Math.max(0, Math.min(trophy.count, (state.counts[id] || 0) + delta));
-  if (next === 0) delete state.counts[id];
-  else state.counts[id] = next;
-  saveCounts(state.counts);
-  renderAll();
-}
-
-function revealTrophy(id) {
-  state.revealed.add(id);
-  saveRevealed(state.revealed);
-  renderAll();
-}
-
-function setView(view) {
-  state.view = view;
-  document.getElementById('trackerView').hidden = view !== 'tracker';
-  document.getElementById('roadmapView').hidden = view !== 'roadmap';
-  document.getElementById('missablesView').hidden = view !== 'missables';
-  for (const button of document.querySelectorAll('#viewTabs button')) {
-    button.classList.toggle('active', button.dataset.view === view);
+function render() {
+  document.getElementById("hdr").innerHTML = headerHTML(DATA, state);
+  document.getElementById("audit").innerHTML = auditHTML(DATA);
+  document.getElementById("banner").innerHTML = bannerHTML(DATA);
+  document.getElementById("tabs").innerHTML = tabsHTML(ui);
+  const toolbar = document.getElementById("toolbar");
+  toolbar.innerHTML = toolbarHTML(DATA, state, ui);
+  // The filter toolbar belongs to the tracker; hiding it on the other tabs
+  // leaves room for all 7 roadmap stages on one 1280x800 screen.
+  toolbar.style.display = ui.view === "tracker" ? "" : "none";
+  const main = document.getElementById("main");
+  if (ui.view === "roadmap") {
+    main.className = "view-roadmap";
+    main.innerHTML = roadmapHTML(DATA, state, ui);
+  } else if (ui.view === "missables") {
+    main.className = "view-missables";
+    main.innerHTML = missablesHTML(DATA, state);
+  } else {
+    main.className = "view-tracker";
+    main.innerHTML = trackerHTML(DATA, state, ui, applyFilters(DATA, state, ui));
   }
-  document.getElementById('toolbar').style.display = view === 'tracker' ? '' : 'none';
-}
-
-function renderList() {
-  renderTrophyList(state.trophies, shownTrophies(), state, handlers);
-}
-
-function wireToolbar() {
-  document.getElementById('search').addEventListener('input', (event) => {
-    state.search = event.target.value;
-    renderList();
-  });
-  for (const button of document.querySelectorAll('#kindFilters button')) {
-    button.addEventListener('click', () => {
-      state.kind = button.dataset.kind;
-      for (const other of document.querySelectorAll('#kindFilters button')) {
-        other.classList.toggle('active', other === button);
-      }
-      renderList();
-    });
+  const search = document.getElementById("searchBox");
+  if (search) {
+    search.addEventListener("input", () => { ui.query = search.value; refreshList(); });
   }
-  document.getElementById('gradeFilter').addEventListener('change', (event) => {
-    state.grade = event.target.value;
-    renderList();
-  });
-  document.getElementById('earnedFilter').addEventListener('change', (event) => {
-    state.earned = event.target.value;
-    renderList();
-  });
-  const spoilerToggle = document.getElementById('spoilerToggle');
-  spoilerToggle.checked = state.spoilers;
-  spoilerToggle.addEventListener('change', () => {
-    state.spoilers = spoilerToggle.checked;
-    saveSpoilers(state.spoilers);
-    renderAll();
-  });
-  document.getElementById('exportBtn').addEventListener('click', () => {
-    exportProgress(state.earnedSet, state.counts);
-  });
-  document.getElementById('importFile').addEventListener('change', async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    try {
-      const imported = importProgress(await file.text(), state.trophies);
-      state.earnedSet = imported.earned;
-      state.counts = imported.counts;
-      saveEarned(state.earnedSet);
-      saveCounts(state.counts);
-      renderAll();
-    } catch {
-      alert('That file is not a Platinum Atlas progress export.');
+  const grade = document.getElementById("gradeSel");
+  if (grade) grade.addEventListener("change", () => { ui.grade = grade.value; render(); });
+  const earned = document.getElementById("earnedSel");
+  if (earned) earned.addEventListener("change", () => { ui.earned = earned.value; render(); });
+  const spoil = document.getElementById("spoilerSel");
+  if (spoil) spoil.addEventListener("change", () => { ui.spoilers = Number(spoil.value); render(); });
+}
+
+// Light refresh for typing: re-render the list column only, keep focus in the box.
+function refreshList() {
+  const main = document.getElementById("main");
+  main.innerHTML = trackerHTML(DATA, state, ui, applyFilters(DATA, state, ui));
+  const search = document.getElementById("searchBox");
+  if (search) {
+    search.focus();
+    search.setSelectionRange(search.value.length, search.value.length);
+    search.addEventListener("input", () => { ui.query = search.value; refreshList(); });
+  }
+}
+
+document.addEventListener("click", (ev) => {
+  const el = ev.target.closest("[data-act]");
+  if (!el) return;
+  const act = el.dataset.act;
+  const id = Number(el.dataset.id);
+  if (act === "tab") { ui.view = el.dataset.view; render(); return; }
+  if (act === "facet") { ui.facet = el.dataset.facet; ui.view = "tracker"; render(); return; }
+  if (act === "select") { ui.select = id; ui.showAllSteps = false; render(); return; }
+  if (act === "show") { ui.select = id; ui.view = "tracker"; ui.showAllSteps = false; render(); return; }
+  if (act === "check") {
+    ev.preventDefault();
+    const t = DATA.trophies.find((x) => x.id === id);
+    if (t) toggleEarned(state, t);
+    render();
+    return;
+  }
+  if (act === "plus" || act === "minus") {
+    ev.stopPropagation();
+    const t = DATA.trophies.find((x) => x.id === id);
+    if (t) {
+      const cur = state.counts[id] || 0;
+      setCount(state, t, cur + (act === "plus" ? 1 : -1));
     }
-    event.target.value = '';
-  });
-  document.getElementById('showMissableBtn').addEventListener('click', () => {
-    selectTrophy(28);
-  });
-  for (const button of document.querySelectorAll('#viewTabs button')) {
-    button.addEventListener('click', () => setView(button.dataset.view));
+    render();
+    return;
   }
-}
+  if (act === "steps") { ui.showAllSteps = !ui.showAllSteps; render(); return; }
+  if (act === "export") { exportState(state); return; }
+  if (act === "import") { document.getElementById("importFile").click(); return; }
+});
 
-export async function bootGuide() {
-  state.trophies = await loadTrophyData();
-  state.sources = await loadSources();
-  state.earnedSet = loadEarned();
-  state.counts = loadCounts();
-  state.revealed = loadRevealed();
-  state.spoilers = loadSpoilers();
-  readParams();
-  wireToolbar();
-  setView(state.view);
-  renderAudit(state.trophies, state.sources);
-  renderFilterCounts(state.trophies);
-  renderAll();
-}
+document.getElementById("importFile").addEventListener("change", async (ev) => {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const next = importStateText(text);
+    state.earned = next.earned;
+    state.counts = next.counts;
+    saveState(state);
+    render();
+  } catch {
+    alert("That file has no Platinum Atlas progress in it.");
+  }
+  ev.target.value = "";
+});
 
-bootGuide();
+loadData().then((d) => {
+  DATA = d;
+  if (!DATA.trophies.some((t) => t.id === ui.select)) ui.select = 28;
+  render();
+}).catch(() => {
+  document.getElementById("main").innerHTML = "<p>Could not load trophies.json. Open this app from its own folder (node serve.ts) — it works fully offline.</p>";
+});

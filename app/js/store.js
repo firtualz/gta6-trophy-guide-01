@@ -1,108 +1,86 @@
-// Saved progress: earned trophies and the spoiler setting, kept in localStorage only.
-// Export writes a JSON file; import reads one back. Nothing leaves the browser.
-const EARNED_KEY = 'platinum-atlas-earned-v1';
-const SPOILER_KEY = 'platinum-atlas-spoilers-v1';
-const COUNTS_KEY = 'platinum-atlas-counts-v1';
-const REVEALED_KEY = 'platinum-atlas-revealed-v1';
+// Progress store: one localStorage key, read and written the same way.
+// State shape: { earned: {id: true}, counts: {id: number} }.
+export const KEY = "platinum-atlas-v1";
 
-export function loadEarned() {
+export function blankState() {
+  return { earned: {}, counts: {} };
+}
+
+export function loadState() {
   try {
-    const raw = localStorage.getItem(EARNED_KEY);
-    if (!raw) return new Set();
-    const ids = JSON.parse(raw);
-    if (!Array.isArray(ids)) return new Set();
-    return new Set(ids.filter((n) => Number.isInteger(n)));
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return blankState();
+    const s = JSON.parse(raw);
+    if (!s || typeof s !== "object") return blankState();
+    return { earned: s.earned || {}, counts: s.counts || {} };
   } catch {
-    return new Set();
+    return blankState();
   }
 }
 
-export function saveEarned(earned) {
-  localStorage.setItem(EARNED_KEY, JSON.stringify([...earned].sort((a, b) => a - b)));
+export function saveState(s) {
+  localStorage.setItem(KEY, JSON.stringify(s));
 }
 
-// Per-trophy progress counters for counted trophies (meditations, races, scans…),
-// stored as {trophyId: count}. A count of 0 is dropped so the stored value stays small.
-export function loadCounts() {
-  try {
-    const raw = localStorage.getItem(COUNTS_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-    const clean = {};
-    for (const [key, value] of Object.entries(parsed)) {
-      const id = Number(key);
-      if (Number.isInteger(id) && Number.isInteger(value) && value > 0) clean[id] = value;
-    }
-    return clean;
-  } catch {
-    return {};
-  }
+export function countOf(s, t) {
+  return s.counts[t.id] || 0;
 }
 
-export function saveCounts(counts) {
-  localStorage.setItem(COUNTS_KEY, JSON.stringify(counts));
+// A counted trophy counts as earned once its target is reached.
+export function isEarned(s, t) {
+  if (s.earned[t.id]) return true;
+  if (t.count && countOf(s, t) >= t.count) return true;
+  return false;
 }
 
-// Story trophies the player chose to reveal with the Reveal button, despite
-// spoilers being on. Stored as a sorted array of trophy ids.
-export function loadRevealed() {
-  try {
-    const raw = localStorage.getItem(REVEALED_KEY);
-    if (!raw) return new Set();
-    const ids = JSON.parse(raw);
-    if (!Array.isArray(ids)) return new Set();
-    return new Set(ids.filter((n) => Number.isInteger(n)));
-  } catch {
-    return new Set();
-  }
+export function earnedCount(s, trophies) {
+  return trophies.filter((t) => isEarned(s, t)).length;
 }
 
-export function saveRevealed(revealed) {
-  localStorage.setItem(REVEALED_KEY, JSON.stringify([...revealed].sort((a, b) => a - b)));
+export function earnedPoints(s, trophies) {
+  let n = 0;
+  for (const t of trophies) if (isEarned(s, t)) n += t.grade === "platinum" ? 180 : t.grade === "gold" ? 90 : t.grade === "silver" ? 30 : 15;
+  return n;
 }
 
-export function loadSpoilers() {
-  return localStorage.getItem(SPOILER_KEY) === 'on';
+export function toggleEarned(s, t) {
+  if (s.earned[t.id]) delete s.earned[t.id];
+  else s.earned[t.id] = true;
+  saveState(s);
 }
 
-export function saveSpoilers(on) {
-  localStorage.setItem(SPOILER_KEY, on ? 'on' : 'off');
+export function setCount(s, t, n) {
+  const v = Math.max(0, Math.min(t.count, n | 0));
+  if (v === 0) delete s.counts[t.id];
+  else s.counts[t.id] = v;
+  saveState(s);
 }
 
-export function exportProgress(earned, counts) {
-  const payload = {
-    app: 'Platinum Atlas — GTA 6 Trophy Guide & Tracker',
-    version: 1,
-    exported_at: new Date().toISOString(),
-    total: 55,
-    earned: [...earned].sort((a, b) => a - b),
-    counts: counts || {},
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'platinum-atlas-progress.json';
-  link.click();
-  URL.revokeObjectURL(link.href);
-  return payload.earned.length;
+// Export: download the current progress as a JSON file.
+export function exportState(s) {
+  const blob = new Blob([JSON.stringify({ app: "platinum-atlas-v1", earned: Object.keys(s.earned).map(Number), counts: s.counts }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "platinum-atlas-progress.json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-export function importProgress(text, trophies) {
-  const doc = JSON.parse(text);
-  const ids = Array.isArray(doc) ? doc : doc.earned;
-  if (!Array.isArray(ids)) throw new Error('not a progress file');
-  const known = new Set(trophies.map((t) => t.id));
-  const clean = ids.filter((n) => Number.isInteger(n) && known.has(n));
+// Import: parse progress JSON the app itself exported (or the same shape).
+// Returns a state object, or throws with a plain message.
+export function importStateText(text) {
+  const raw = JSON.parse(text);
+  const earned = {};
   const counts = {};
-  if (doc && typeof doc === 'object' && doc.counts && typeof doc.counts === 'object') {
-    for (const [key, value] of Object.entries(doc.counts)) {
-      const id = Number(key);
-      const trophy = trophies.find((t) => t.id === id);
-      if (trophy && trophy.count && Number.isInteger(value) && value > 0) {
-        counts[id] = Math.min(value, trophy.count);
-      }
-    }
+  const ids = Array.isArray(raw.earned) ? raw.earned : Object.keys(raw.earned || {});
+  for (const id of ids) {
+    const n = Number(id);
+    if (Number.isInteger(n) && n >= 1 && n <= 55) earned[n] = true;
   }
-  return { earned: new Set(clean), counts };
+  for (const [k, v] of Object.entries(raw.counts || {})) {
+    const n = Number(k);
+    if (Number.isInteger(n) && n >= 1 && n <= 55 && Number.isFinite(v) && v > 0) counts[n] = v | 0;
+  }
+  if (!Object.keys(earned).length && !Object.keys(counts).length) throw new Error("no progress found in that file");
+  return { earned, counts };
 }
